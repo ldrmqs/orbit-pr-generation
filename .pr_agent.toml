@@ -1,0 +1,22 @@
+[github_app]
+pr_commands = [
+  "/describe",
+  "/review",
+  "/improve"
+]
+
+[pr_description]
+generate_ai_title = true 
+extra_instructions = "Once the review is done, generate a new title for the PR with a 'REVIEWED' and create a more concise and direct title."
+description_style = "bullet_points"
+keep_original_user_title = false 
+
+[pr_reviewer]
+extra_instructions = """\
+- Focus on security and error handling
+- Check test coverage
+"""
+
+[pr_code_suggestions]
+commitable_code_suggestions = true
+suggestions_score_threshold = 3
