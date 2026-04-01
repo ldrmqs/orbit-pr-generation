@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: quickpizza
+spec:
+  template:
+    spec:
+      containers:
+        - name: auth-service
+          env:
+            - name: AUTH_JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secrets
+                  key: jwt-public-key
