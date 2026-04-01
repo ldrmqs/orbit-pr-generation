@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-logging-config
+  namespace: production
+data:
+  logSanitizationRules: |
+    - pattern: '(?i)(ssn|social|email):?\s*\S+'
+      maskWith: 'REDACTED'
+    - pattern: '\b\d{3}-\d{2}-\d{4}\b'
+      maskWith: 'REDACTED:ssn_us'
+    - pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+      maskWith: 'REDACTED:email'
