@@ -1,0 +1,12 @@
+logging:
+  level: INFO
+  pii_masking_enabled: true
+  redact_fields:
+    - ssn
+    - national_id
+    - iban
+    - patient_id
+    - dob
+accessControl:
+  log_access: restricted
+  allowed_roles: ["compliance_officer", "sre_team"]
