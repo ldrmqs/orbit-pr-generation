@@ -1,0 +1,9 @@
+logging:
+  redactFields:
+    - username
+    - email
+    - phone
+    - employeeId
+  redactEnabled: true
+supportTicket:
+  sanitizeInputs: true
