@@ -1,0 +1,7 @@
+metadata:
+  annotations:
+    <http://nginx.ingress.kubernetes.io/proxy-connect-timeout|nginx.ingress.kubernetes.io/proxy-connect-timeout>: "30"
+    <http://nginx.ingress.kubernetes.io/proxy-read-timeout|nginx.ingress.kubernetes.io/proxy-read-timeout>: "30"
+    <http://nginx.ingress.kubernetes.io/proxy-send-timeout|nginx.ingress.kubernetes.io/proxy-send-timeout>: "30"
+    <http://nginx.ingress.kubernetes.io/proxy-buffer-size|nginx.ingress.kubernetes.io/proxy-buffer-size>: "16k"
+    <http://nginx.ingress.kubernetes.io/proxy-buffers-number|nginx.ingress.kubernetes.io/proxy-buffers-number>: "4"
