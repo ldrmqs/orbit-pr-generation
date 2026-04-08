@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tax-portal
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tax-portal
+  template:
+    metadata:
+      labels:
+        app: tax-portal
+    spec:
+      containers:
+        - name: tax-portal
+          image: myorg/tax-portal:v1.5.2
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MASK_SENSITIVE_LOGS
+              value: "true"
+            - name: ENCRYPT_TRANSMISSION
+              value: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
