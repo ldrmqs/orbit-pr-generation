@@ -1,0 +1,256 @@
+---
+# Valkey (Redis-compatible) Deployment for the cart service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: valkey
+  namespace: otel-demo
+  labels:
+    app: valkey
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: otel-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valkey
+  template:
+    metadata:
+      labels:
+        app: valkey
+        app.kubernetes.io/name: valkey
+        app.kubernetes.io/component: cache
+        app.kubernetes.io/part-of: otel-demo
+    spec:
+      serviceAccountName: valkey
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: valkey
+          image: valkey/valkey:7.2-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          command:
+            - valkey-server
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30
+---
+# ServiceAccount for Valkey
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: valkey
+  namespace: otel-demo
+  labels:
+    app: valkey
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: otel-demo
+automountServiceAccountToken: false
+---
+# Service exposing Valkey to the cart pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: valkey
+  namespace: otel-demo
+  labels:
+    app: valkey
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: otel-demo
+spec:
+  type: ClusterIP
+  selector:
+    app: valkey
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+---
+# Cart service Deployment — connects to valkey:6379
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: otel-demo
+  labels:
+    app: cart
+    app.kubernetes.io/name: cart
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: otel-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+        app.kubernetes.io/name: cart
+        app.kubernetes.io/component: service
+        app.kubernetes.io/part-of: otel-demo
+    spec:
+      serviceAccountName: cart
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-valkey
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z valkey 6379; do
+                echo "Waiting for valkey:6379 ...";
+                sleep 2;
+              done;
+              echo "Valkey is reachable."
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: cart
+          image: otel/demo:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: VALKEY_ADDR
+              value: "valkey:6379"
+            - name: REDIS_ADDR
+              value: "valkey:6379"
+            - name: ASPNETCORE_URLS
+              value: "http://*:8080"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30
+---
+# ServiceAccount for Cart
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cart
+  namespace: otel-demo
+  labels:
+    app: cart
+    app.kubernetes.io/name: cart
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: otel-demo
+automountServiceAccountToken: false
+---
+# Service exposing Cart within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: otel-demo
+  labels:
+    app: cart
+    app.kubernetes.io/name: cart
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: otel-demo
+spec:
+  type: ClusterIP
+  selector:
+    app: cart
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
