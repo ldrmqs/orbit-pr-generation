@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress
+spec:
+  template:
+    spec:
+      containers:
+      - name: ingress-controller
+        env:
+        - name: RETRY_ATTEMPTS
+          value: "5"
