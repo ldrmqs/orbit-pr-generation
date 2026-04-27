@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: public-api-container
+        resources:
+          limits:
+            connections: 100
+          requests:
+            connections: 50
