@@ -1,7 +1,7 @@
 [github_app]
 pr_commands = [
   "/describe",
-  "/review",
+  "/agentic_review",
   "/improve"
 ]
 
