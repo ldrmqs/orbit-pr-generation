@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: production
+data:
+  LOG_PII_MASKING: "true"
+  LOG_MASKED_FIELDS: "name,ssn_us,national_id,address"
+  LOG_LEVEL: "info"
