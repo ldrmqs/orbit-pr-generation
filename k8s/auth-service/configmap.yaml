@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-logging-config
+  namespace: production
+data:
+  LOG_REDACTION_PATTERN: "(?i)(ssn|name|national_id|address):\\s*\\S+"
+  LOG_REDACTION_REPLACEMENT: "REDACTED"
+  LOG_FORMAT: "json"
+  ENABLE_LOG_REDACTION: "true"
