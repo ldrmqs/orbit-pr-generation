@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart
+  namespace: demo
+  labels:
+    app: redis-cart
+spec:
+  selector:
+    app: redis-cart
+  ports:
+    - name: redis
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
