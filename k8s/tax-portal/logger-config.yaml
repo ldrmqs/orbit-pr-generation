@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tax-portal-logger-config
+  namespace: production
+data:
+  log_redaction_patterns: |
+    - name_regex: '(?i)(name)'
+    - ssn_regex: '\\b\d{3}-\d{2}-\d{4}\b'
+    - national_id_regex: '[A-Z0-9]{9,}'
+    - address_regex: '\\d+\s+([A-Za-z]+\s)+Street|Avenue|Blvd|Rd|Road'
+  log_redactor_enabled: "true"
+  log_redactor_replace: "[REDACTED]"
