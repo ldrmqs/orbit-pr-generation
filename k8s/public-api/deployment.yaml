@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: public-api
+        env:
+        - name: RECOMMENDATIONS_SERVICE_MAX_CONNECTIONS
+          value: "100"
+        - name: RECOMMENDATIONS_SERVICE_TIMEOUT_MS
+          value: "7000"
