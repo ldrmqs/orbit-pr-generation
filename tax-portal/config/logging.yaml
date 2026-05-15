@@ -1,0 +1,11 @@
+logging:
+  level: info
+  format: json
+  piiRedaction:
+    enabled: true
+    patterns:
+      - name: ".*"
+      - ssn_us: ".*\\d{3}-\\d{2}-\\d{4}.*"
+      - national_id: ".*"
+      - address: ".*"
+    replacement: "[REDACTED]"
