@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: public-api
+        env:
+        - name: RECOMMENDATIONS_CONN_POOL_SIZE
+          value: "100"
