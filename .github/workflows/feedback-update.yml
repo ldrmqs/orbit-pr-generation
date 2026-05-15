@@ -1,0 +1,62 @@
+name: Feedback Update on PR Close
+
+# Fast path for real-time Slack thread notification when an orbit-managed PR is
+# merged or closed. Python source lives in .github/feedback-ingestion/ (copied
+# from Orbit-RuntimeOps/jobs/feedback-ingestion — keep in sync on changes).
+#
+# Security notes:
+#   - All event inputs are passed via `env:` and read in Python via os.environ —
+#     never interpolated directly into `run:` shell commands.
+#   - PR_NUMBER is an integer, PR_MERGED is a boolean — both safe types.
+#   - No use of issue/PR title, body, branch name, or commit message anywhere.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  id-token: write     # required for AWS OIDC federation
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: feedback-update-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    # Label gate — only orbit-generated PRs trigger Slack work.
+    if: contains(github.event.pull_request.labels.*.name, 'sre-auto-fix')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      # Third-party actions pinned by full commit SHA (security). Update via Dependabot.
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: .github/feedback-ingestion/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r .github/feedback-ingestion/requirements.txt
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@5579c002bb4778aa43395ef1df492868a9a1c83f # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::952893849914:role/orbit-feedbackloop-gh-actions
+          aws-region: us-east-1
+
+      - name: Process PR event
+        working-directory: .github/feedback-ingestion
+        env:
+          PR_NUMBER:       ${{ github.event.pull_request.number }}
+          PR_MERGED:       ${{ github.event.pull_request.merged }}
+          GITHUB_REPO:     ${{ github.repository }}
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: python handle_pr_event.py
