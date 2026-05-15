@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-api
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: public-api
+  template:
+    metadata:
+      labels:
+        app: public-api
+    spec:
+      containers:
+        - name: public-api
+          image: myorg/public-api:v3.4.1
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DOWNSTREAM_TIMEOUT_MS
+              value: "5000"
+            - name: CONNECTION_POOL_SIZE
+              value: "50"
+            - name: DOWNSTREAM_RETRY_COUNT
+              value: "2"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
