@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: social-services
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: social-services
+  template:
+    metadata:
+      labels:
+        app: social-services
+    spec:
+      containers:
+        - name: social-services
+          image: myorg/social-services:v1.5.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENABLE_PII_MASKING
+              value: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
