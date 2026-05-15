@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tax-portal-logging-config
+  namespace: production
+data:
+  log-scrubbing-rules: |
+    - fields-to-mask:
+        - name
+        - ssn_us
+        - national_id
+        - address
+      mask-pattern: "****"
+    - enable-pii-filtering: true
+    - sanitize-logs: true
+    - log-level: info
