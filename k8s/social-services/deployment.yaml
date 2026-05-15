@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: social-services
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: social-services
+  template:
+    metadata:
+      labels:
+        app: social-services
+    spec:
+      containers:
+      - name: social-services
+        image: myorg/social-services:v1.2.3
+        ports:
+        - containerPort: 8080
+        env:
+        - name: LOG_PII_MASKING_ENABLED
+          value: "true"
+        - name: PII_FIELDS_TO_MASK
+          value: "ssn_us,email"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
