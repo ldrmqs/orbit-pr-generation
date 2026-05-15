@@ -1,0 +1,8 @@
+logging:
+  level: INFO
+  redactFields:
+    - name
+    - ssn
+    - national_id
+    - address
+  enablePIIEncryption: true
