@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  template:
+    spec:
+      containers:
+      - name: auth-service-container
+        resources:
+          limits:
+            memory: "256Mi"
